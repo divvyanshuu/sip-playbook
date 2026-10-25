@@ -1,0 +1,284 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>First SIP Playbook</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,750&family=Source+Sans+3:wght@400;600&family=IBM+Plex+Mono:wght@500&display=swap">
+<style>
+html{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}
+/* Layout: single readable column, sticky tab bar, funds as stacked cards that fit a phone */
+:root{
+  --bg:#f5f7f6; --surface:#ffffff; --ink:#14231f; --muted:#5b6b66; --line:#dde5e2;
+  --accent:#0f6b5c; --accent-soft:#e2f1ed; --gold:#b07a12; --gold-soft:#fbf1dc;
+  --up:#1d7a3e; --down:#b23a2e;
+  --display:"Bricolage Grotesque",ui-sans-serif,system-ui,sans-serif;
+  --body:"Source Sans 3",ui-sans-serif,system-ui,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0f1715; --surface:#17221f; --ink:#e6eeeb; --muted:#9aaba5; --line:#2a3833;
+  --accent:#5cc5ae; --accent-soft:#18332d; --gold:#e3b45a; --gold-soft:#33291a;
+  --up:#6fd394; --down:#f08a7e; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0f1715; --surface:#17221f; --ink:#e6eeeb; --muted:#9aaba5; --line:#2a3833;
+  --accent:#5cc5ae; --accent-soft:#18332d; --gold:#e3b45a; --gold-soft:#33291a;
+  --up:#6fd394; --down:#f08a7e; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font:16px/1.55 var(--body);
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0 48px}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
+.wrap{max-width:760px;margin:0 auto}
+header{padding-block:28px 12px}
+.eyebrow{font:500 12px var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--accent)}
+h1{font:750 clamp(30px,7vw,44px)/1.05 var(--display);margin:6px 0 10px;text-wrap:balance}
+h2{font:700 22px/1.2 var(--display);margin:28px 0 10px;text-wrap:balance}
+h3{font:600 17px/1.3 var(--display);margin:0}
+p{margin:0 0 10px;max-width:65ch}
+.lede{color:var(--muted)}
+nav{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);padding-block:10px;
+  display:flex;gap:6px;overflow-x:auto;border-bottom:1px solid var(--line);scrollbar-width:none}
+nav button{flex:0 0 auto;font:600 14px var(--body);color:var(--muted);background:transparent;border:1px solid var(--line);
+  border-radius:999px;padding:7px 14px;cursor:pointer}
+nav button[aria-selected="true"]{background:var(--accent);border-color:var(--accent);color:var(--bg)}
+button:focus-visible,input:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+.note{background:var(--gold-soft);border-radius:10px;padding:12px 14px;font-size:15px;margin:14px 0}
+.note b{color:var(--gold)}
+.muted{color:var(--muted);font-size:14px}
+ul.rules{padding-left:20px;margin:0}
+ul.rules li{margin-bottom:6px}
+/* Plan */
+.field{display:grid;gap:6px;margin:10px 0 16px}
+.field label{font-weight:600}
+.money{display:flex;align-items:center;gap:8px;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:8px 12px;max-width:260px}
+.money span{font:500 18px var(--mono);color:var(--muted)}
+.money input{border:0;background:transparent;color:var(--ink);font:500 22px var(--mono);width:100%;outline:none}
+.bucket{display:grid;grid-template-columns:1fr auto;gap:4px 12px;padding:12px 0;border-top:1px solid var(--line)}
+.bucket .amt{font:500 18px var(--mono);font-variant-numeric:tabular-nums;text-align:right}
+.bucket .pct{font:500 12px var(--mono);color:var(--muted);text-align:right}
+.bar{grid-column:1/-1;height:6px;border-radius:3px;background:var(--line);overflow:hidden}
+.bar i{display:block;height:100%;background:var(--accent)}
+.bucket.gold .bar i{background:var(--gold)}
+.calc{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px}
+.calc div{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:10px;min-width:0}
+.calc .r{font:500 12px var(--mono);color:var(--muted)}
+.calc .v{font:500 17px var(--mono);font-variant-numeric:tabular-nums}
+.calc .g{font-size:13px;color:var(--up)}
+.yrs{display:flex;gap:6px;flex-wrap:wrap}
+.yrs button{font:500 14px var(--mono);border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:8px;padding:6px 12px;cursor:pointer}
+.yrs button[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-soft);color:var(--accent)}
+/* Fund cards */
+.group{margin-top:22px}
+.group-head{display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap}
+.tag{font:500 11px var(--mono);letter-spacing:.06em;text-transform:uppercase;padding:3px 8px;border-radius:999px;background:var(--accent-soft);color:var(--accent);white-space:nowrap}
+.tag.hot{background:var(--gold-soft);color:var(--gold)}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px;margin-top:10px}
+.rets{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin:10px 0 8px}
+.rets div{min-width:0}
+.rets .k{font:500 11px var(--mono);color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
+.rets .n{font:500 16px var(--mono);font-variant-numeric:tabular-nums}
+.pos{color:var(--up)} .neg{color:var(--down)}
+.card p{font-size:15px;color:var(--muted);margin:0}
+.row{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}
+.sym{font:500 13px var(--mono);color:var(--accent)}
+ol.steps{list-style:none;padding:0;margin:0;counter-reset:s}
+ol.steps li{counter-increment:s;display:grid;grid-template-columns:30px 1fr;gap:10px;padding:10px 0;border-top:1px solid var(--line)}
+ol.steps li::before{content:counter(s);font:500 14px var(--mono);color:var(--accent);background:var(--accent-soft);border-radius:50%;width:28px;height:28px;display:grid;place-items:center}
+.steps-h{font:600 13px var(--mono);text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin:20px 0 4px}
+footer{margin-top:36px;padding-top:16px;border-top:1px solid var(--line);font-size:13px;color:var(--muted)}
+footer a{color:var(--accent)}
+@media (max-width:420px){.calc{grid-template-columns:1fr}.calc div{display:flex;justify-content:space-between;align-items:baseline;gap:8px;flex-wrap:wrap}}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+<header>
+  <div class="eyebrow">Mutual funds · Groww · smallcase</div>
+  <h1>Your first SIP playbook</h1>
+  <p class="lede">A simple plan for starting monthly investing in your early 20s: which funds to pick, a few stocks and ETFs, smallcases, and how to set it all up on Groww.</p>
+</header>
+
+<nav role="tablist" aria-label="Sections">
+  <button role="tab" id="t-plan" data-v="plan" aria-selected="true">Plan</button>
+  <button role="tab" id="t-funds" data-v="funds" aria-selected="false">Mutual funds</button>
+  <button role="tab" id="t-stocks" data-v="stocks" aria-selected="false">Stocks & ETFs</button>
+  <button role="tab" id="t-sc" data-v="smallcase" aria-selected="false">Smallcases</button>
+  <button role="tab" id="t-how" data-v="how" aria-selected="false">How to start</button>
+</nav>
+
+<!-- PLAN -->
+<section id="plan" role="tabpanel">
+  <h2>Split your monthly SIP</h2>
+  <div class="field">
+    <label for="amt">How much can you invest every month?</label>
+    <div class="money"><span>₹</span><input id="amt" type="number" inputmode="numeric" min="500" step="500" value="5000"></div>
+  </div>
+  <div id="buckets"></div>
+  <p class="muted" style="margin-top:10px">On a small budget (₹1,000–2,000), start with just the Nifty 50 index fund and one flexi cap fund. Add the others as your salary grows.</p>
+
+  <h2>What it could grow to</h2>
+  <div class="yrs" id="yrs"></div>
+  <div class="calc" id="calc"></div>
+  <p class="muted" style="margin-top:8px">Estimates only. 8% is cautious, 10% moderate, 12% optimistic for long-term equity. Nothing is guaranteed.</p>
+
+  <h2>Ground rules</h2>
+  <ul class="rules">
+    <li>Always pick the <b>Direct</b> plan with the <b>Growth</b> option. Fees are lower.</li>
+    <li>3–4 funds is enough. More funds usually means owning the same stocks twice.</li>
+    <li>Keep 3–6 months of expenses in an FD or liquid fund before going big on equity.</li>
+    <li>Don't stop your SIP when markets fall. You're buying more units for the same money.</li>
+    <li>Check once or twice a year, not every day. Increase the SIP when your salary goes up.</li>
+  </ul>
+  <div class="note"><b>Right now:</b> most equity funds are negative over the last 1 year (Nifty 50 is down about 10%). That's normal market cycles. Expect roughly 10–12% a year over the long run, not the 25–40% you see in old blog posts.</div>
+  <div class="note"><b>Tax saver (ELSS):</b> only gives the 80C deduction under the old tax regime. If you're on the new regime, skip ELSS and use a flexi cap fund.</div>
+</section>
+
+<!-- FUNDS -->
+<section id="funds" role="tabpanel" hidden>
+  <h2>Mutual fund shortlist</h2>
+  <p class="muted">All are on Groww. Pick one fund per category, not all of them. Returns are for Direct-Growth plans as of about 23–25 Oct 2026; 3Y and 5Y are yearly averages (CAGR). Exp. = yearly fee.</p>
+  <div id="fundlist"></div>
+</section>
+
+<!-- STOCKS -->
+<section id="stocks" role="tabpanel" hidden>
+  <h2>Stock SIP and ETFs</h2>
+  <p>Groww's <b>Stock SIP</b> buys a stock or ETF for you automatically every week or month, from ₹500 a time (or a fixed number of shares). You need a Groww demat account and Autopay. Brokerage applies to each purchase.</p>
+  <div class="note"><b>Keep this to 10–20%</b> of what you invest. Single stocks swing more than funds. ETFs are the safer way to use Stock SIP.</div>
+  <div id="stocklist"></div>
+  <p class="muted" style="margin-top:14px">These are well-known large companies to learn with, not buy tips. Check the current price and news on Groww first.</p>
+</section>
+
+<!-- SMALLCASE -->
+<section id="smallcase" role="tabpanel" hidden>
+  <h2>Smallcases</h2>
+  <p>A smallcase is a ready-made basket of stocks or ETFs built around an idea. You buy the actual shares into your own demat account in one go.</p>
+  <div class="note"><b>On Groww:</b> open <b>smallcases.groww.in</b>, or the smallcase app and choose "Login with Groww". On Zerodha it's built into Kite. If you don't see it in the app, use that website.</div>
+  <div id="sclist"></div>
+  <p class="muted" style="margin-top:14px">Each stock in a basket costs brokerage, plus rebalancing costs. Under about ₹5,000 a month, plain mutual fund SIPs are cheaper and simpler. Fees and availability change, so check the smallcase page before buying.</p>
+</section>
+
+<!-- HOW -->
+<section id="how" role="tabpanel" hidden>
+  <h2>Setting it up on Groww</h2>
+  <div class="steps-h">One-time setup</div>
+  <ol class="steps">
+    <li><div>Download Groww, sign up and finish KYC: PAN, Aadhaar, bank account, selfie and signature.</div></li>
+    <li><div>Turn on Stocks (demat) too if you want Stock SIP, ETFs or smallcases. Mutual funds alone don't need it.</div></li>
+    <li><div>Set up Autopay (e-mandate or UPI). Keep the limit above your SIP, e.g. ₹10,000 for a ₹5,000 SIP, so payments aren't rejected.</div></li>
+  </ol>
+  <div class="steps-h">Mutual fund SIP</div>
+  <ol class="steps" style="counter-reset:s 3">
+    <li><div>Search the fund name. Check it says <b>Direct</b> and <b>Growth</b>.</div></li>
+    <li><div>Tap <b>Start SIP</b>, enter the amount, and pick a date a few days after salary arrives (e.g. the 5th).</div></li>
+    <li><div>Repeat for each fund. Turn on <b>Step-up SIP</b> (e.g. +10% a year) if it's offered.</div></li>
+  </ol>
+  <div class="steps-h">Stock or ETF SIP</div>
+  <ol class="steps" style="counter-reset:s 6">
+    <li><div>Open the stock or ETF page (e.g. NIFTYBEES), tap <b>Create Stock SIP</b>, choose amount or quantity, weekly or monthly, then confirm Autopay.</div></li>
+  </ol>
+  <div class="steps-h">After that</div>
+  <ol class="steps" style="counter-reset:s 7">
+    <li><div>Review every 6–12 months. Don't sell in a panic when markets drop.</div></li>
+    <li><div>Tax on selling equity: held over 1 year, 12.5% on gains above ₹1.25 lakh a year; under 1 year, 20%. Check current rules when you sell.</div></li>
+  </ol>
+</section>
+
+<footer>
+  <p>General educational information, not financial advice. Investments are subject to market risk; past returns don't predict future returns. For personal advice, speak to a SEBI-registered adviser.</p>
+  <p>Data: <a href="https://sharpely.in/mutual-funds/category/equity-flexi-cap">sharpely</a> (fund returns), <a href="https://www.valueresearchonline.com/funds/19701/parag-parikh-flexi-cap-fund-direct-plan/">Value Research</a>, <a href="https://choiceindia.com/mutual-funds/nippon-india-gold-savings-fund-growth">Choice India</a> (gold), <a href="https://groww.in/stocks/sip">Groww Stock SIP</a>, <a href="https://www.smallcase.com/blog/introducing-smallcases-on-groww/">smallcase on Groww</a>.</p>
+</footer>
+</div>
+
+<script>
+const BUCKETS=[
+ {name:"Nifty 50 index fund",pick:"UTI or HDFC Nifty 50 Index Fund",pct:30,why:"The foundation. Owns India's 50 biggest companies at the lowest cost."},
+ {name:"Flexi cap fund",pick:"Parag Parikh or HDFC Flexi Cap",pct:30,why:"Manager invests across large, mid and small companies."},
+ {name:"Mid cap fund",pick:"HDFC Mid Cap or Edelweiss Mid Cap",pct:20,why:"More growth, bigger ups and downs."},
+ {name:"Small cap fund",pick:"Nippon India or Bandhan Small Cap",pct:10,why:"Highest risk. Keep it small and hold 7+ years."},
+ {name:"Gold",pick:"Nippon India Gold Savings Fund",pct:10,why:"Often rises when stocks fall.",gold:true}
+];
+const FUNDS=[
+ {cat:"Index funds",tag:"Start here",hot:true,items:[
+  ["UTI Nifty 50 Index Fund",-11.92,6.44,5.53,"~0.18%","Lowest cost, no fund-manager risk. Pick one Nifty 50 fund, not two."],
+  ["HDFC Nifty 50 Index Fund",null,null,null,"~0.20%","Same index as UTI, returns are nearly identical. A fine alternative."],
+  ["UTI / Motilal Oswal Nifty Next 50 Index",null,null,null,"~0.30%","The next 50 big companies. More volatile. Optional."]]},
+ {cat:"Flexi cap",tag:"Core",items:[
+  ["Parag Parikh Flexi Cap",-6.68,12.28,10.46,"0.69%","Very popular, value style, also owns some US stocks. Min SIP ₹1,000."],
+  ["HDFC Flexi Cap",-6.76,14.38,14.28,"0.75%","Strong 3 and 5 year record."],
+  ["ICICI Prudential Flexi Cap",-3.81,14.09,13.10,"0.88%","Fell less than peers in the past year."]]},
+ {cat:"Mid cap",tag:"Growth",items:[
+  ["HDFC Mid Cap",-3.17,15.26,16.49,"0.74%","Largest mid cap fund, consistent."],
+  ["Edelweiss Mid Cap",-3.68,18.17,15.42,"0.68%","Strong 3 year return, low fee."],
+  ["Motilal Oswal Midcap",-8.88,16.31,17.90,"0.92%","Best 5 year number here, but concentrated and swingy."]]},
+ {cat:"Small cap",tag:"Keep ≤ 15%",items:[
+  ["Nippon India Small Cap",-1.40,12.61,16.46,"0.69%","Biggest small cap fund, long track record."],
+  ["Bandhan Small Cap",2.32,22.08,18.00,"0.65%","Top recent 3 and 5 year returns among large small cap funds."],
+  ["Invesco India Small Cap",2.88,19.44,17.42,"0.65%","Consistent and low cost."]]},
+ {cat:"Tax saver (ELSS)",tag:"Old regime only",items:[
+  ["Mirae Asset ELSS Tax Saver",2.04,15.19,13.18,"0.66%","Low cost, steady. 3 year lock-in."],
+  ["SBI ELSS Tax Saver",-2.06,19.27,17.35,"0.93%","Strong 3 and 5 year record."],
+  ["Parag Parikh ELSS Tax Saver",-6.75,12.29,14.19,"0.63%","Same style as Parag Parikh Flexi Cap."]]},
+ {cat:"Gold",tag:"5–10%",items:[
+  ["Nippon India Gold Savings Fund",11.24,31.05,null,"0.25%","Invests in Gold BeES. No demat needed. Gold has had a very strong run."]]}
+];
+const STOCKS=[
+ {cat:"ETFs (best for Stock SIP)",items:[
+  ["Nifty 50 BeES","NIFTYBEES","India's top 50 companies in one share."],
+  ["Junior BeES","JUNIORBEES","The next 50 large companies."],
+  ["Nifty Midcap 150 ETF","MID150BEES","150 mid-size companies."],
+  ["Gold BeES","GOLDBEES","Gold, cheaply, in small amounts."],
+  ["Motilal Oswal Nasdaq 100 ETF","MON100","Big US tech. Check it isn't priced far above its NAV before buying."]]},
+ {cat:"Blue-chip stocks",items:[
+  ["HDFC Bank","HDFCBANK","India's largest private bank."],
+  ["ICICI Bank","ICICIBANK","Private bank with consistent growth."],
+  ["Reliance Industries","RELIANCE","Energy, Jio and retail."],
+  ["Infosys","INFY","Global IT services, pays dividends."],
+  ["TCS","TCS","India's largest IT company."],
+  ["Bharti Airtel","BHARTIARTL","Telecom leader."],
+  ["ITC","ITC","FMCG and hotels, high dividend."],
+  ["Larsen & Toubro","LT","Infrastructure and engineering."],
+  ["Hindustan Unilever","HINDUNILVR","Everyday consumer goods, stable."]]}
+];
+const SC=[
+ ["All Weather Investing","Windmill Capital","Low–moderate risk","Equity, gold and debt ETFs in one balanced basket. A good first smallcase."],
+ ["Equity & Gold","Windmill Capital","Moderate risk","Nifty ETF plus Gold ETF, rebalanced for you."],
+ ["Top 100 Stocks","Windmill Capital","Moderate risk","India's biggest companies, held directly."],
+ ["Dividend Aristocrats","Windmill Capital","Moderate risk","Companies with a long record of paying dividends."],
+ ["Theme baskets (EV, Digital India, Rural)","Various","High risk","One idea only. Treat as a small side bet; themes can lag for years."]
+];
+const $=s=>document.querySelector(s);
+const inr=n=>"₹"+Math.round(n).toLocaleString("en-IN");
+const fmt=v=>v==null?'<span class="muted">—</span>':`<span class="${v<0?'neg':'pos'}">${v>0?'+':''}${v.toFixed(1)}%</span>`;
+let years=10;
+function render(){
+  const a=Math.max(0,+$("#amt").value||0);
+  $("#buckets").innerHTML=BUCKETS.map(b=>`<div class="bucket${b.gold?' gold':''}"><div><h3>${b.name}</h3><div class="muted">${b.pick}</div></div><div><div class="amt">${inr(a*b.pct/100)}</div><div class="pct">${b.pct}%</div></div><div class="bar"><i style="width:${b.pct*2.5}%"></i></div><div class="muted" style="grid-column:1/-1">${b.why}</div></div>`).join("");
+  const inv=a*12*years;
+  $("#calc").innerHTML=[8,10,12].map(r=>{const m=r/1200,n=years*12,fv=a*((Math.pow(1+m,n)-1)/m)*(1+m);
+    return `<div><span class="r">${r}% a year</span><span class="v">${inr(fv)}</span><span class="g">+${inr(fv-inv)} gain</span></div>`}).join("")+
+    `<div style="grid-column:1/-1;background:transparent;border:0;padding:0" class="muted">You put in ${inr(inv)} over ${years} years.</div>`;
+  document.querySelectorAll("#calc > div > span").forEach(s=>s.style.display="block");
+}
+$("#yrs").innerHTML=[5,10,15,20].map(y=>`<button type="button" id="y${y}" aria-pressed="${y===years}" data-y="${y}">${y} yrs</button>`).join("");
+$("#yrs").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;years=+b.dataset.y;
+  document.querySelectorAll("#yrs button").forEach(x=>x.setAttribute("aria-pressed",x===b));render()});
+$("#amt").addEventListener("input",render);
+$("#fundlist").innerHTML=FUNDS.map(g=>`<div class="group"><div class="group-head"><h2 style="margin:0">${g.cat}</h2><span class="tag${g.hot?' hot':''}">${g.tag}</span></div>${g.items.map(f=>`<div class="card"><h3>${f[0]}</h3><div class="rets"><div><div class="k">1Y</div><div class="n">${fmt(f[1])}</div></div><div><div class="k">3Y</div><div class="n">${fmt(f[2])}</div></div><div><div class="k">5Y</div><div class="n">${fmt(f[3])}</div></div><div><div class="k">Exp.</div><div class="n">${f[4]}</div></div></div><p>${f[5]}</p></div>`).join("")}</div>`).join("")+
+ `<p class="muted" style="margin-top:14px">— means not shown here; check the fund page on Groww. Minimum SIP is usually ₹100–₹500.</p>`;
+$("#stocklist").innerHTML=STOCKS.map(g=>`<div class="group"><h2 style="margin:0">${g.cat}</h2>${g.items.map(s=>`<div class="card"><div class="row"><h3>${s[0]}</h3><span class="sym">${s[1]}</span></div><p style="margin-top:4px">${s[2]}</p></div>`).join("")}</div>`).join("");
+$("#sclist").innerHTML=SC.map(s=>`<div class="card"><div class="row"><h3>${s[0]}</h3><span class="tag">${s[2]}</span></div><div class="muted" style="margin:2px 0 6px">${s[1]}</div><p>${s[3]}</p></div>`).join("");
+const tabs=[...document.querySelectorAll("nav button")];
+function show(v){tabs.forEach(t=>t.setAttribute("aria-selected",t.dataset.v===v));
+  document.querySelectorAll("section[role=tabpanel]").forEach(s=>s.hidden=s.id!==v);
+  try{localStorage.setItem("tab",v)}catch(e){} window.scrollTo({top:0})}
+tabs.forEach(t=>t.addEventListener("click",()=>show(t.dataset.v)));
+render();
+const h=location.hash.slice(1);
+if(tabs.some(t=>t.dataset.v===h))show(h);
+</script>
+</body>
+</html>
